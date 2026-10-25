@@ -1,4 +1,4 @@
-```dockerfile
+
 FROM node:22-slim AS frontend-build
 
 WORKDIR /frontend
@@ -30,4 +30,3 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 CMD ["python", "run.py"]
-```
