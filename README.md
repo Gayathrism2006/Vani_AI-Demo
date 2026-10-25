@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Vani_AI-Demo
 
 # Vani AI — AI-Powered Voice Assessment Platform
@@ -131,3 +132,6 @@ JWT_SECRET=vani_ai_secret_key_super_secure_2026
 > - Voice cloning using your supplied reference voice is **100% active and running locally on OpenVoice**.
 > - Curated scenario questions in English and Tamil for all 10 programming languages are immediately ready.
 > - Candidate recording & fallback speech-to-text operates seamlessly without discarding any candidate speech.
+=======
+# Vani_AI-Demo
+>>>>>>> 7d55ca21145fd182ccac0572be6fbce37b6b9d5f
