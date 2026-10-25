@@ -1,0 +1,35 @@
+# Environment Variables & Secrets
+.env
+backend/.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Node & Frontend
+node_modules/
+.npm
+.vite/
+frontend/node_modules/
+
+# Database & Runtime Uploads
+backend/vani_ai.db
+backend/vani_ai.db-journal
+backend/cache/audio/*
+!backend/cache/audio/.gitkeep
+backend/uploads/recordings/*
+!backend/uploads/recordings/.gitkeep
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
