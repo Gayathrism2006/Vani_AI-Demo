@@ -33,3 +33,5 @@ backend/uploads/recordings/*
 Thumbs.db
 .vscode/
 .idea/
+# Large AI model checkpoint - keep out of GitHub
+/backend/models/checkpoints_v2/converter/checkpoint.pth
