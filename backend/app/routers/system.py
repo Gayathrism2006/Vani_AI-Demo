@@ -9,6 +9,7 @@ from app.config import (
 from app.services.voice_service import voice_service
 from app.services.question_service import question_service
 from app.services.elevenlabs_service import elevenlabs_service
+from app.services.gnani_tts_service import gnani_tts_service
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
@@ -42,5 +43,9 @@ def get_system_status():
         "overall_status": "ready" if (voice_cloning_ready and ref_voice_exists) else "degraded",
         "openai": openai_status,
         "elevenlabs": elevenlabs_status,
+        "gnani_tts": {
+            "configured": bool(gnani_tts_service.api_key_id),
+            "provider": "Gnani AI Vachana VC",
+        },
         "openvoice": openvoice_status
     }

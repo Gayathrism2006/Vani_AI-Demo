@@ -103,6 +103,7 @@ async def _initialize_assessment_session(
         )
         questions[0]["audio_url"] = f"/api/audio/cached/{q1_audio['filename']}"
         questions[0]["is_cloned"] = q1_audio.get("is_cloned", False)
+        questions[0]["tts_provider"] = q1_audio.get("tts_provider", "Unknown")
     except Exception as e:
         logger.error(f"Failed to pre-generate Q1 audio: {e}")
         questions[0]["audio_url"] = ""
@@ -132,6 +133,7 @@ async def _initialize_assessment_session(
                         db_q = json.loads(row_db["questions_json"])
                         db_q[q_idx - 1]["audio_url"] = f"/api/audio/cached/{q_res['filename']}"
                         db_q[q_idx - 1]["is_cloned"] = q_res.get("is_cloned", False)
+                        db_q[q_idx - 1]["tts_provider"] = q_res.get("tts_provider", "Unknown")
                         cur.execute("UPDATE assessments SET questions_json = ? WHERE id = ?", (json.dumps(db_q), assessment_id))
                         c.commit()
                     c.close()
@@ -274,6 +276,7 @@ async def get_question_audio(assessment_id: str, question_idx: int):
         cursor = conn.cursor()
         questions[question_idx - 1]["audio_url"] = audio_url
         questions[question_idx - 1]["is_cloned"] = audio_meta.get("is_cloned", False)
+        questions[question_idx - 1]["tts_provider"] = audio_meta.get("tts_provider", "Unknown")
         cursor.execute("UPDATE assessments SET questions_json = ? WHERE id = ?", (json.dumps(questions), assessment_id))
         conn.commit()
         conn.close()
@@ -285,6 +288,7 @@ async def get_question_audio(assessment_id: str, question_idx: int):
         "audio_url": audio_url,
         "filename": audio_meta["filename"],
         "is_cloned": audio_meta.get("is_cloned", False),
+        "tts_provider": audio_meta.get("tts_provider", "Unknown"),
         "cached": audio_meta.get("cached", False)
     }
 
@@ -343,11 +347,7 @@ async def record_answer(
 
     final_transcript = result["transcript"]
     if (not final_transcript or final_transcript.startswith("(Candidate speech")) and live_transcript and live_transcript.strip():
-        from app.services.elevenlabs_service import apply_contextual_corrections
-        corrected_live, applied_corr = apply_contextual_corrections(live_transcript.strip(), prog_lang)
-        final_transcript = corrected_live
-        if applied_corr:
-            result.setdefault("corrections_applied", []).extend(applied_corr)
+        final_transcript = live_transcript.strip()
 
     # Biometric Voice Verification against candidate's Terms & Conditions baseline voice
     clean_audio_path = RECORDINGS_DIR / result["audio_filename"]
@@ -372,7 +372,6 @@ async def record_answer(
         "isolation_message": result["isolation_message"],
         "isolation_success": result["isolation_success"],
         "stt_provider": result["stt_provider"],
-        "corrections_applied": result.get("corrections_applied", []),
         "voice_matched": verify_res.get("matched", True),
         "voice_similarity_score": verify_res.get("similarity_score", 100.0),
         "voice_match_status": verify_res.get("status", "matched"),

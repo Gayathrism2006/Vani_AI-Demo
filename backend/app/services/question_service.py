@@ -840,28 +840,29 @@ class QuestionGenerationService:
                 from openai import OpenAI
                 client = OpenAI(api_key=self.api_key, timeout=5.0, max_retries=0)
 
-                prompt = f"""You are an expert principal engineer and technical interview assessor for Vani AI.
-Generate exactly 5 progressive scenario-based technical interview questions for a software engineer specializing in {prog_lang}.
-The scenario questions and titles MUST be written entirely in the {assess_lang} language.
+                prompt = f"""You are an expert principal engineer creating oral technical interview questions for Vani AI.
+Generate exactly 5 progressive, realistic scenario-based interview questions for a software engineer specializing in {prog_lang}.
+Write every title and question entirely in {assess_lang}.
 
-Guidelines:
-1. Exactly 5 questions.
-2. Focus strictly on real-world engineering challenges in {prog_lang}: debugging, memory management, concurrency, architecture, performance tuning, failure modes.
-3. Progression:
-   - Question 1: Practical scenario (Easy-Medium)
-   - Question 2: Concurrency or design pattern scenario (Medium)
-   - Question 3: Tricky edge case or production bug scenario (Medium)
-   - Question 4: Architectural tradeoff or scaling scenario (Medium-Hard)
-   - Question 5: Deep internal mechanics or mission-critical recovery scenario (Hard)
-4. Language Requirement: The "title" and "question" fields MUST be in {assess_lang}.
-5. Return ONLY a valid JSON array of 5 objects with keys:
-   - "id": integer 1 to 5
-   - "title": string (scenario title in {assess_lang})
-   - "question": string (the detailed scenario question in {assess_lang})
-   - "difficulty": string ("Easy-Medium", "Medium", "Medium-Hard", "Hard")
-   - "concept": string (technical concept being evaluated)
+Each question must describe a concrete workplace situation with relevant context, a problem or goal, and practical constraints. Ask the candidate to explain how they would investigate, reason about, or make a decision in that situation. The questions must assess technical understanding through spoken explanations, not coding exercises.
 
-Do NOT include markdown formatting or extra text. Output valid JSON array only."""
+Strictly do not include source code, pseudocode, code snippets, code blocks, commands, sample implementations, or code-like examples. Never ask the candidate to write, complete, fix, or output code. Ask for a verbal explanation of the approach, reasoning, and trade-offs instead.
+
+Progress the difficulty as follows:
+1. Practical scenario (Easy-Medium)
+2. Concurrency or design scenario (Medium)
+3. Tricky edge case or production incident (Medium)
+4. Architectural trade-off or scaling scenario (Medium-Hard)
+5. Deep technical reasoning or mission-critical recovery scenario (Hard)
+
+Return a JSON object with a "questions" array containing exactly 5 objects. Each object must have:
+- "id": integer from 1 to 5
+- "title": a concise scenario title in {assess_lang}
+- "question": a detailed, open-ended scenario question in {assess_lang}
+- "difficulty": one of "Easy-Medium", "Medium", "Medium-Hard", or "Hard"
+- "concept": the technical concept being evaluated
+
+Return JSON only. Do not include markdown or any text outside the JSON object."""
 
                 # Try modern active models in order
                 candidate_models = ["gpt-4o-mini", "gpt-4o"]
@@ -871,25 +872,47 @@ Do NOT include markdown formatting or extra text. Output valid JSON array only."
                         response = client.chat.completions.create(
                             model=model_name,
                             messages=[
-                                {"role": "system", "content": "You output valid JSON only."},
+                                {
+                                    "role": "system",
+                                    "content": (
+                                        "Return valid JSON only. Create oral, scenario-based interview "
+                                        "questions and never include or request code."
+                                    ),
+                                },
                                 {"role": "user", "content": prompt}
                             ],
+                            response_format={"type": "json_object"},
                             temperature=0.75,
                             max_tokens=2000
                         )
 
                         content = response.choices[0].message.content.strip()
-                        if content.startswith("```json"):
-                            content = content[7:]
-                        if content.startswith("```"):
-                            content = content[3:]
-                        if content.endswith("```"):
-                            content = content[:-3]
-
-                        questions = json.loads(content.strip())
-                        if isinstance(questions, list) and len(questions) == 5:
+                        payload = json.loads(content)
+                        questions = payload.get("questions") if isinstance(payload, dict) else None
+                        required_fields = {"id", "title", "question", "difficulty", "concept"}
+                        if (
+                            isinstance(questions, list)
+                            and len(questions) == 5
+                            and all(
+                                isinstance(question, dict)
+                                and required_fields.issubset(question)
+                                and question["id"] == expected_id
+                                and all(
+                                    isinstance(question[field], str) and question[field].strip()
+                                    for field in ("title", "question", "difficulty", "concept")
+                                )
+                                and not any(
+                                    marker in (question["title"] + question["question"]).lower()
+                                    for marker in ("```", "`", "<code", "</code>")
+                                )
+                                for expected_id, question in enumerate(questions, start=1)
+                            )
+                        ):
                             logger.info(f"OpenAI {model_name} successfully generated 5 custom {prog_lang} ({assess_lang}) questions!")
                             return questions
+                        raise ValueError(
+                            "OpenAI returned questions with an invalid shape or code-formatted content."
+                        )
                     except Exception as model_err:
                         err_str = str(model_err)
                         logger.warning(f"OpenAI model {model_name} attempt: {err_str}")

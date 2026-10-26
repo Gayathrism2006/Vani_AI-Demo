@@ -17,7 +17,6 @@ logger.setLevel(logging.INFO)
 
 ELEVENLABS_ISOLATION_URL = "https://api.elevenlabs.io/v1/audio-isolation"
 ELEVENLABS_STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
-ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
 # Technical Domain Vocabulary for ElevenLabs Scribe STT Keyterms
 DOMAIN_KEYTERMS: Dict[str, List[str]] = {
@@ -51,124 +50,6 @@ DOMAIN_KEYTERMS: Dict[str, List[str]] = {
         "unit test", "scalability", "latency", "throughput", "caching", "Redis", "cloud", "backend"
     ]
 }
-
-# Contextual phonetic / mispronunciation corrections
-# Maps commonly misspoken or misheard phonetic representations to exact context-appropriate terms
-PHONETIC_CORRECTIONS = {
-    "java": [
-        (r"\b[Jj]aba\s*script\b", "JavaScript"),
-        (r"\b[Jj]abaskrip[t]?\b", "JavaScript"),
-        (r"\b[Jj]aba\b", "Java"),
-        (r"\b[Jj]awa\b", "Java"),
-        (r"\b[Jj]avva\b", "Java"),
-        (r"\b[Hh]ibernet\b", "Hibernate"),
-        (r"\b[Hh]ybernate\b", "Hibernate"),
-        (r"\b[Jj]eeviem\b", "JVM"),
-        (r"\b[Jj]dbasi\b", "JDBC"),
-        (r"\b[Ss]pringbot\b", "Spring Boot"),
-        (r"\b[Ss]pring\s*boot\b", "Spring Boot"),
-        (r"\b[Pp]olimorfism\b", "polymorphism"),
-        (r"\b[Mm]ultitreading\b", "multithreading"),
-        (r"\b[Mm]ulti\s*treading\b", "multithreading"),
-        (r"\b[Gg]arbaj\b", "garbage"),
-        (r"\b[Ss]inchroniz(ed|ation)?\b", r"synchroniz\1"),
-        (r"\b[Tt]reds?\b", "thread"),
-        (r"\b[Tt]hreds?\b", "thread"),
-        (r"\b[Ee]nkapsulation\b", "encapsulation"),
-        (r"\b[Aa]bstraxion\b", "abstraction"),
-        (r"\b[Vv]olatile\b", "volatile"),
-        (r"\b[Gg]eneriks\b", "generics"),
-    ],
-    "python": [
-        (r"\b[Pp]ythun\b", "Python"),
-        (r"\b[Pp]ithon\b", "Python"),
-        (r"\b[Pp]aithan\b", "Python"),
-        (r"\b[Dd]ijango\b", "Django"),
-        (r"\b[Jj]ango\b", "Django"),
-        (r"\b[Ff]lask\b", "Flask"),
-        (r"\b[Nn]umpy\b", "NumPy"),
-        (r"\b[Pp]andas\b", "Pandas"),
-        (r"\b[Pp]i\s*torch\b", "PyTorch"),
-        (r"\b[Aa]syncio\b", "asyncio"),
-        (r"\b[Aa]\s*sync\s*io\b", "asyncio"),
-        (r"\b[Gg]il\b", "GIL"),
-        (r"\b[Dd]ecorator\b", "decorator"),
-        (r"\b[Gg]enerator\b", "generator"),
-    ],
-    "javascript": [
-        (r"\b[Jj]aba\s*script\b", "JavaScript"),
-        (r"\b[Jj]abaskrip[t]?\b", "JavaScript"),
-        (r"\b[Jj]avascript\b", "JavaScript"),
-        (r"\b[Tt]ypeskrip[t]?\b", "TypeScript"),
-        (r"\b[Tt]ype\s*script\b", "TypeScript"),
-        (r"\b[Rr]iakt\b", "React"),
-        (r"\b[Nn]od\b", "Node"),
-        (r"\b[Nn]ode\s*js\b", "Node.js"),
-        (r"\b[Ee]vent\s*loop\b", "event loop"),
-        (r"\b[Kk]losure\b", "closure"),
-        (r"\b[Pp]romis\b", "Promise"),
-    ],
-    "c++": [
-        (r"\b[Pp]oynter[s]?\b", "pointer"),
-        (r"\b[Dd]estroctor\b", "destructor"),
-        (r"\b[Cc]onstroctor\b", "constructor"),
-        (r"\b[Vv]ektor\b", "vector"),
-        (r"\b[Rr]aii\b", "RAII"),
-        (r"\b[Mm]utex\b", "mutex"),
-    ],
-    "c#": [
-        (r"\b[Dd]ot\s*net\b", ".NET"),
-        (r"\b[Ll]ink\b", "LINQ"),
-        (r"\b[Aa]\s*sync\b", "async"),
-        (r"\b[Aa]\s*wait\b", "await"),
-    ],
-    "sql": [
-        (r"\b[Ss]equel\b", "SQL"),
-        (r"\b[Ss]equal\b", "SQL"),
-        (r"\b[Cc]ikel\b", "SQL"),
-        (r"\b[Ee]sql\b", "SQL"),
-        (r"\b[Ss]ikwel\b", "SQL"),
-        (r"\b[Ee]xplain\s*analyse\b", "EXPLAIN ANALYZE"),
-        (r"\b[Ii]ndeks\b", "index"),
-        (r"\b[Tt]ransaksion\b", "transaction"),
-        (r"\b[Aa]cid\b", "ACID"),
-        (r"\b[Pp]ostgres\b", "PostgreSQL"),
-        (r"\b[Pp]osgres\b", "PostgreSQL"),
-    ],
-    "go": [
-        (r"\b[Gg]orotin[s]?\b", "goroutine"),
-        (r"\b[Gg]oruting[s]?\b", "goroutine"),
-        (r"\b[Cc]hanel[s]?\b", "channel"),
-        (r"\b[Mm]yutex\b", "mutex"),
-    ],
-    "rust": [
-        (r"\b[Bb]orro(w)?\s*checker\b", "borrow checker"),
-        (r"\b[Bb]orow\b", "borrow"),
-        (r"\b[Ll]ifetim(e)?\b", "lifetime"),
-        (r"\b[Uu]nsafe\b", "unsafe"),
-    ],
-    "common": [
-        (r"\b[Jj]aba\b", "Java"),
-        (r"\b[Dd]oker\b", "Docker"),
-        (r"\b[Dd]ockar\b", "Docker"),
-        (r"\b[Kk]ubernets\b", "Kubernetes"),
-        (r"\b[Kk]ubernitis\b", "Kubernetes"),
-        (r"\b[Ss]equel\b", "SQL"),
-        (r"\b[Ss]equal\b", "SQL"),
-        (r"\b[Cc]ikel\b", "SQL"),
-        (r"\b[Ee]sql\b", "SQL"),
-        (r"\b[Mm]ongodivi\b", "MongoDB"),
-        (r"\b[Mm]ongodp\b", "MongoDB"),
-        (r"\b[Aa]pij\b", "API"),
-        (r"\b[Ee]piai\b", "API"),
-        (r"\b[Jj]ason\b", "JSON"),
-        (r"\b[Gg]it\s*hub\b", "GitHub"),
-        (r"\b[Mm]icro\s*services\b", "microservices"),
-        (r"\b[Aa]lgoritm\b", "algorithm"),
-        (r"\b[Dd]atabas\b", "database"),
-    ]
-}
-
 
 def get_ffmpeg_path() -> Optional[str]:
     """Retrieves ffmpeg executable path via imageio_ffmpeg or system path."""
@@ -281,41 +162,6 @@ def standardize_and_pad_audio(audio_bytes: bytes, target_duration_sec: float = 5
     return audio_bytes
 
 
-def apply_contextual_corrections(text: str, programming_language: str = "Java") -> (str, List[str]):
-    """
-    Applies domain-aware phonetic and contextual pronunciation corrections.
-    E.g. if programming language is Java and speaker said 'jaba', it converts to 'Java'.
-    """
-    if not text:
-        return text, []
-
-    corrected = text
-    applied = []
-    lang_key = programming_language.strip().lower()
-
-    # Apply common technical corrections
-    for pattern, repl in PHONETIC_CORRECTIONS.get("common", []):
-        if re.search(pattern, corrected):
-            old_str = corrected
-            corrected = re.sub(pattern, repl, corrected)
-            if old_str != corrected:
-                applied.append(f"{pattern} -> {repl}")
-
-    # Apply language-specific corrections
-    specific_rules = PHONETIC_CORRECTIONS.get(lang_key, [])
-    if not specific_rules and "java" in lang_key:
-        specific_rules = PHONETIC_CORRECTIONS.get("java", [])
-
-    for pattern, repl in specific_rules:
-        if re.search(pattern, corrected):
-            old_str = corrected
-            corrected = re.sub(pattern, repl, corrected)
-            if old_str != corrected:
-                applied.append(f"{pattern} -> {repl}")
-
-    return corrected, applied
-
-
 class ElevenLabsAudioProcessor:
     def __init__(self):
         pass
@@ -355,51 +201,6 @@ class ElevenLabsAudioProcessor:
             "status": "configured",
             "message": "ElevenLabs API Key configured and active."
         }
-
-    async def text_to_speech(
-        self,
-        text: str,
-        language: str = "English",
-        voice_id: Optional[str] = None
-    ) -> Optional[bytes]:
-        """
-        Synthesizes speech using ElevenLabs Text-to-Speech API (eleven_multilingual_v2).
-        Natively supports both English and Tamil.
-        """
-        if not self.is_configured():
-            return None
-
-        # If user has a custom cloned voice ID configured, use it; otherwise use multilingual voice
-        target_voice = voice_id or os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
-        url = f"{ELEVENLABS_TTS_URL}/{target_voice}"
-
-        headers = {
-            "xi-api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "text": text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.8,
-                "style": 0.0,
-                "use_speaker_boost": True
-            }
-        }
-
-        try:
-            async with httpx.AsyncClient(timeout=45.0) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                if res.status_code == 200 and len(res.content) > 1000:
-                    logger.info("ElevenLabs TTS synthesized question audio successfully!")
-                    return res.content
-                else:
-                    logger.warning(f"ElevenLabs TTS response ({res.status_code}): {res.text[:200]}")
-                    return None
-        except Exception as e:
-            logger.error(f"ElevenLabs TTS exception: {e}")
-            return None
 
     async def add_cloned_voice(self, voice_name: str, audio_file_path: Path) -> Optional[str]:
         """
@@ -487,13 +288,12 @@ class ElevenLabsAudioProcessor:
         self,
         audio_bytes: bytes,
         filename: str,
+        programming_language: str,
         language: str = "English",
-        programming_language: str = "Java",
         question_context: str = ""
     ) -> Dict[str, Any]:
         """
         Sends audio to ElevenLabs Speech-to-Text API with domain-aware keyterms.
-        Applies contextual phonetic correction (e.g. converting 'jaba' -> 'Java' based on context).
         """
         # Build keyterms list for contextual accuracy
         lang_key = programming_language.strip().lower()
@@ -524,9 +324,7 @@ class ElevenLabsAudioProcessor:
                 "keyterms": keyterms[:100],
                 "transcript_edit": (
                     f"Technical software engineering assessment answer in {programming_language}. "
-                    "Transcribe with exact technical capitalization and domain spelling. If the speaker mispronounces "
-                    "technical words phonetically or with an accent (such as jaba, pythun, doker, sequel), "
-                    "convert them to the correct technical spelling (Java, Python, Docker, SQL)."
+                    "Transcribe with exact technical capitalization and domain spelling."
                 )
             }
             if language == "Tamil":
@@ -542,17 +340,11 @@ class ElevenLabsAudioProcessor:
                         result = response.json()
                         raw_transcript = result.get("text", "").strip()
 
-                        # Contextual phonetic correction pass (e.g. 'jaba' -> 'Java')
-                        corrected_transcript, applied_corrections = apply_contextual_corrections(
-                            raw_transcript, programming_language
-                        )
-
-                        logger.info(f"ElevenLabs STT transcription successful! Corrections applied: {applied_corrections}")
+                        logger.info("ElevenLabs STT transcription successful.")
                         return {
                             "success": True,
-                            "transcript": corrected_transcript or "(Candidate speech captured)",
+                            "transcript": raw_transcript or "(Candidate speech captured)",
                             "raw_transcript": raw_transcript,
-                            "corrections_applied": applied_corrections,
                             "provider": "ElevenLabs Scribe STT (Context-Aware)",
                             "error": None
                         }
@@ -586,8 +378,8 @@ class ElevenLabsAudioProcessor:
         audio_bytes: bytes,
         assessment_id: str,
         question_index: int,
+        programming_language: str,
         language: str = "English",
-        programming_language: str = "Java",
         question_context: str = "",
         live_transcript: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -626,7 +418,7 @@ class ElevenLabsAudioProcessor:
         else:
             isolation_msg = isolation_result.get("error") or "Direct audio processed"
 
-        # Step 2: ElevenLabs Speech-to-Text with domain context & mispronunciation correction
+        # Step 2: ElevenLabs Speech-to-Text with domain context
         stt_result = await self.speech_to_text(
             audio_bytes=final_audio_bytes,
             filename=audio_filename,
@@ -637,8 +429,7 @@ class ElevenLabsAudioProcessor:
 
         final_transcript = stt_result.get("transcript", "").strip()
 
-        # If ElevenLabs STT was empty or silence/pause but user spoke and live transcript was captured by browser,
-        # apply contextual correction to live transcript as a smart safety net
+        # Use the browser transcript only when server-side transcription returned no speech.
         is_non_speech = (
             not final_transcript
             or final_transcript.startswith("(Candidate speech")
@@ -646,12 +437,7 @@ class ElevenLabsAudioProcessor:
             or final_transcript.strip().lower() in ("silence", "pause")
         )
         if is_non_speech and live_transcript and live_transcript.strip():
-            corrected_live, live_corrections = apply_contextual_corrections(
-                live_transcript.strip(), programming_language
-            )
-            if corrected_live:
-                final_transcript = corrected_live
-                stt_result["corrections_applied"] = live_corrections
+            final_transcript = live_transcript.strip()
 
         return {
             "audio_filename": audio_filename,
@@ -659,7 +445,6 @@ class ElevenLabsAudioProcessor:
             "isolation_success": isolated,
             "isolation_message": isolation_msg,
             "transcript": final_transcript,
-            "corrections_applied": stt_result.get("corrections_applied", []),
             "stt_provider": stt_result.get("provider", "ElevenLabs Scribe STT"),
             "audio_url": f"/api/audio/recording/{audio_filename}"
         }

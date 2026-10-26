@@ -12,6 +12,7 @@ load_dotenv(dotenv_path=ENV_PATH)
 # Environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+GNANI_API_KEY_ID = os.getenv("GNANI_API_KEY_ID", "")
 JWT_SECRET = os.getenv("JWT_SECRET", "vani_ai_secret_key_super_secure_2026")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24

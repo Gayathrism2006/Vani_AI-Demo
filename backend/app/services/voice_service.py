@@ -91,12 +91,21 @@ class VoiceCloningService:
 
     async def generate_speech(self, text: str, language: str, assessment_id: str = "gen", question_index: int = 1) -> dict:
         """
-        Generates speech using base TTS and applies OpenVoice tone color conversion
-        to match the user's supplied reference voice.
+        Generates speech with Gnani voice-cloned TTS, with Edge-TTS and OpenVoice fallback.
         Deduplicates in-flight tasks and checks global cache.
         """
-        text_hash = hashlib.md5(f"{text.strip()}_{language}".encode('utf-8')).hexdigest()[:10]
-        final_filename = f"cloned_{language.lower()}_{text_hash}.wav"
+        reference_voice_path = (
+            REFERENCE_VOICE_WAV if REFERENCE_VOICE_WAV.exists() else REFERENCE_VOICE_OGG
+        )
+        if reference_voice_path.exists():
+            reference_stat = reference_voice_path.stat()
+            reference_signature = f"{reference_stat.st_size}_{reference_stat.st_mtime_ns}"
+        else:
+            reference_signature = "no-reference"
+        text_hash = hashlib.md5(
+            f"gnani_vachana_vc_v1_{reference_signature}_{text.strip()}_{language}".encode("utf-8")
+        ).hexdigest()[:10]
+        final_filename = f"gnani_{language.lower()}_{text_hash}.wav"
         final_path = AUDIO_CACHE_DIR / final_filename
 
         # Fast path 1: Check canonical cached cloned file
@@ -105,29 +114,27 @@ class VoiceCloningService:
                 "filename": final_filename,
                 "path": str(final_path),
                 "is_cloned": True,
-                "cached": True
+                "cached": True,
+                "tts_provider": "Gnani AI Vachana VC",
             }
 
         # Fast path 2: Check any existing cached file with the same text hash from previous runs
         matching = list(AUDIO_CACHE_DIR.glob(f"*_{text_hash}.wav"))
         for candidate in matching:
             if candidate.exists() and candidate.stat().st_size > 1000:
-                try:
-                    shutil.copyfile(candidate, final_path)
-                    logger.info(f"Re-used previously cloned voice for hash {text_hash} -> {final_filename}")
-                    return {
-                        "filename": final_filename,
-                        "path": str(final_path),
-                        "is_cloned": True,
-                        "cached": True
-                    }
-                except Exception:
-                    return {
-                        "filename": candidate.name,
-                        "path": str(candidate),
-                        "is_cloned": True,
-                        "cached": True
-                    }
+                provider = (
+                    "Gnani AI Vachana VC"
+                    if candidate.name.startswith("gnani_")
+                    else "Edge-TTS with OpenVoice"
+                )
+                logger.info("Re-used cached voice audio for hash %s from %s", text_hash, candidate.name)
+                return {
+                    "filename": candidate.name,
+                    "path": str(candidate),
+                    "is_cloned": True,
+                    "cached": True,
+                    "tts_provider": provider,
+                }
 
         # Deduplication: If a generation task is already in-flight for this text, wait for it
         task_key = f"{language.lower()}_{text_hash}"
@@ -159,41 +166,23 @@ class VoiceCloningService:
         final_path: Path,
         final_filename: str
     ) -> dict:
-        # Step 0: Try ElevenLabs Multilingual TTS if configured
+        # Try Gnani AI's voice-cloned TTS first.
         try:
-            from app.services.elevenlabs_service import elevenlabs_service
-            eleven_audio = await elevenlabs_service.text_to_speech(text=text, language=language)
-            if eleven_audio and len(eleven_audio) > 1000:
-                eleven_base_filename = f"eleven_base_{text_hash}.mp3"
-                eleven_base_path = AUDIO_CACHE_DIR / eleven_base_filename
-                with open(eleven_base_path, "wb") as f:
-                    f.write(eleven_audio)
-
-                is_cloned = False
-                if self.is_ready and self.converter and self.reference_se is not None:
-                    success = await asyncio.to_thread(self._convert_tone_sync, str(eleven_base_path), str(final_path))
-                    if success and final_path.exists() and final_path.stat().st_size > 1000:
-                        is_cloned = True
-                        logger.info(f"ElevenLabs TTS + OpenVoice Tone Color Converter succeeded: {final_filename}")
-
-                if is_cloned:
-                    try: eleven_base_path.unlink()
-                    except Exception: pass
-                    return {
-                        "filename": final_filename,
-                        "path": str(final_path),
-                        "is_cloned": True,
-                        "cached": False
-                    }
-                else:
-                    return {
-                        "filename": eleven_base_filename,
-                        "path": str(eleven_base_path),
-                        "is_cloned": False,
-                        "cached": False
-                    }
+            from app.services.gnani_tts_service import gnani_tts_service
+            gnani_audio = await gnani_tts_service.text_to_speech(text)
+            if gnani_audio and len(gnani_audio) > 1000:
+                final_path.parent.mkdir(parents=True, exist_ok=True)
+                final_path.write_bytes(gnani_audio)
+                logger.info("Gnani AI voice-cloned TTS succeeded: %s", final_filename)
+                return {
+                    "filename": final_filename,
+                    "path": str(final_path),
+                    "is_cloned": True,
+                    "cached": False,
+                    "tts_provider": "Gnani AI Vachana VC",
+                }
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS attempt: {e}. Falling back to Edge-TTS neural engine.")
+            logger.warning("Gnani TTS attempt failed; using Edge-TTS fallback: %s", e)
 
         # Select base voice
         voice = EDGE_TTS_VOICES.get(language, "en-IN-NeerjaNeural")
@@ -211,11 +200,15 @@ class VoiceCloningService:
 
         # Step 2: Clone voice using OpenVoice ToneColorConverter
         is_cloned = False
+        openvoice_filename = f"openvoice_{language.lower()}_{text_hash}.wav"
+        openvoice_path = AUDIO_CACHE_DIR / openvoice_filename
         if self.is_ready and self.converter and self.reference_se is not None:
             # Run in worker thread to prevent event loop blocking
-            success = await asyncio.to_thread(self._convert_tone_sync, str(temp_base_path), str(final_path))
-            if success and final_path.exists() and final_path.stat().st_size > 1000:
+            success = await asyncio.to_thread(self._convert_tone_sync, str(temp_base_path), str(openvoice_path))
+            if success and openvoice_path.exists() and openvoice_path.stat().st_size > 1000:
                 is_cloned = True
+                final_filename = openvoice_filename
+                final_path = openvoice_path
                 logger.info(f"OpenVoice successfully cloned question audio: {final_filename}")
 
         # If voice cloning failed or wasn't ready, use base audio as final
@@ -238,7 +231,8 @@ class VoiceCloningService:
             "filename": final_filename,
             "path": str(final_path),
             "is_cloned": is_cloned,
-            "cached": False
+            "cached": False,
+            "tts_provider": "Edge-TTS with OpenVoice" if is_cloned else "Edge-TTS",
         }
 
 # Global singleton

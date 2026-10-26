@@ -951,19 +951,6 @@ export default function AssessmentPage({ assessment, onSubmitted }) {
                   <CheckCircle2 size={16} />
                   <span>{currentAnswer.transcript ? 'Recognized Transcript' : 'Transcript Unavailable'}</span>
                 </span>
-                {currentAnswer.corrections_applied && currentAnswer.corrections_applied.length > 0 && (
-                  <span style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    background: 'rgba(234, 179, 8, 0.15)',
-                    color: '#fbbf24',
-                    border: '1px solid rgba(234, 179, 8, 0.3)',
-                    padding: '2px 8px',
-                    borderRadius: '6px'
-                  }} title={currentAnswer.corrections_applied.join(', ')}>
-                    ✨ Contextual Domain Correction Active
-                  </span>
-                )}
               </div>
 
               {currentAnswer.audio_url && (

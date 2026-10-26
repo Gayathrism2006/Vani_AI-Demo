@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Vani_AI-Demo
 
 # Vani AI — AI-Powered Voice Assessment Platform
@@ -117,21 +116,23 @@ Then open your browser at:
 
 ## API Configuration
 
-To enable live OpenAI GPT-3.5 Turbo generation and live ElevenLabs cloud audio isolation:
+To enable OpenAI question generation, ElevenLabs STT/audio isolation, and Gnani AI voice-cloned TTS:
 
 Edit `backend/.env`:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+GNANI_API_KEY_ID=your_gnani_api_key_id_here
 JWT_SECRET=vani_ai_secret_key_super_secure_2026
 ```
 
+Gnani voice-cloned TTS creates and caches an embedding from the first 30 seconds of the local reference recording. Replace `GNANI_API_KEY_ID` with your key ID in `backend/.env`; do not put API keys in frontend code or commit them.
+
 > **Note**: Even before entering API keys:
 >
-> - Voice cloning using your supplied reference voice is **100% active and running locally on OpenVoice**.
+> - Voice-cloned TTS uses Gnani AI when configured; Edge-TTS with local OpenVoice is the fallback.
 > - Curated scenario questions in English and Tamil for all 10 programming languages are immediately ready.
 > - Candidate recording & fallback speech-to-text operates seamlessly without discarding any candidate speech.
-=======
+
 # Vani_AI-Demo
->>>>>>> 7d55ca21145fd182ccac0572be6fbce37b6b9d5f
